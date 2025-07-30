@@ -1,42 +1,25 @@
-"""
-FastAPI entry-point for the job-finder backend.
-Run with:  uvicorn backend.main:app --reload
-"""
-
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import logging
 
-# Local helpers
-from agent import resume_based_job_search
-
-# ────────────────────────────────────────────────────────────────
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s  %(levelname)s  %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s  %(levelname)s  %(message)s")
 logger = logging.getLogger("backend")
 
 app = FastAPI(title="Resume-Based Job Finder API", version="1.0.0")
 
-# Add CORS middleware to allow frontend requests
+# CORS: Allow frontend domains + dev
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:5174", "http://localhost:3000", "http://127.0.0.1:5173", "http://127.0.0.1:5174", "http://127.0.0.1:3000"],
+    allow_origins=["*"],  # Replace with specific domains in prod
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-
 @app.get("/health", summary="Health-check")
 async def health():
-    """Kubernetes / load-balancer health-check."""
     return {"status": "ok"}
-
-
-from fastapi import HTTPException
-import traceback
 
 @app.post("/search-jobs", summary="Upload resume → get jobs")
 async def search_jobs(
@@ -57,13 +40,15 @@ async def search_jobs(
     logger.info("Received resume: %s (%d bytes)", resume.filename, len(contents))
 
     try:
+        # 🔽 Delay import so that Swagger doesn't crash on startup
+        from agent import resume_based_job_search
+
         results = resume_based_job_search(contents, resume.filename, location, limit=limit)
         logger.info(f"Returning {len(results)} jobs for {resume.filename}")
     except Exception as e:
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"INTERNAL ERROR: {str(e)}")
-
 
     if (
         results
