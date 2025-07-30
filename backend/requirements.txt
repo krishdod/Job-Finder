@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+python-multipart
+transformers
+torch
+pdfplumber
+docx2txt
+python-dotenv
+tqdm
+duckduckgo_search
+httpx
