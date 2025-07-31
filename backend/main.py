@@ -59,3 +59,8 @@ async def search_jobs(
         raise HTTPException(status_code=500, detail=results[0]["error"])
 
     return JSONResponse({"location": location, "results": results})
+
+
+@app.get("/")
+def root():
+    return {"message": "API is live! Visit /docs for Swagger UI."}
