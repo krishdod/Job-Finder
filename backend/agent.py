@@ -7,7 +7,7 @@ import json, os, re, tempfile, urllib.parse, http.client, logging
 from typing import List
 
 import pdfplumber, docx2txt, httpx
-from duckduckgo_search import DDGS
+from ddgs import DDGS
 from transformers import pipeline
 # from serpapi import GoogleSearch  # type: ignore[import-not-found]
 

@@ -1,7 +1,9 @@
 import React, { useState, useRef } from "react";
 import axios from "axios";
 
-const API_BASE = "http://localhost:8000";
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8000";
+
+//const API_BASE = "http://localhost:8000";
 
 export default function ResumeForm({ onResults, onLoading }) {
   const [file, setFile] = useState(null);
@@ -78,7 +80,7 @@ export default function ResumeForm({ onResults, onLoading }) {
         formData,
         { 
           params: { location, limit: jobLimit },
-          timeout: 30000 // 30 second timeout
+          timeout: 60000 // 30 second timeout
         }
       );
       
