@@ -9,6 +9,8 @@ from typing import List
 import pdfplumber, docx2txt, httpx
 from ddgs import DDGS
 from transformers import pipeline
+from dotenv import load_dotenv
+load_dotenv()  
 # from serpapi import GoogleSearch  # type: ignore[import-not-found]
 
 log = logging.getLogger("agent")
@@ -17,11 +19,13 @@ logging.basicConfig(
 )
 
 # ── ENV
-RAPIDAPI_KEY = "747d9fb20cmsh41a3e6c8b23b606p1b7ffdjsn02f916ed95bb"
-SERPAPI_KEY = "0fa3494b475c8b42f2ad60faf9477b6340452842dcb3548b29779826e614ff3d"
+RAPIDAPI_KEY = os.getenv("RAPIDAPI_KEY")
+SERPAPI_KEY = os.getenv("SERPAPI_KEY")
 NER_MODEL = "dslim/bert-base-NER"
+
 if not RAPIDAPI_KEY:
-    raise EnvironmentError("RAPIDAPI_KEY missing – set it in .env")
+    log.warning("RAPIDAPI_KEY missing – job search will be limited")
+    RAPIDAPI_KEY = None
 
 # ── NER pipeline
 _ner = pipeline("ner", model=NER_MODEL, aggregation_strategy="simple")
@@ -207,19 +211,31 @@ def serp_search(
     job: str, loc: str, exp: str, cat: str, recency: str = "2024"
 ) -> list[dict]:
     if not SERPAPI_KEY:
+        log.info("SerpAPI key not available, skipping SerpAPI search")
         return []
-    params = {
-        "engine": "google_jobs",
-        "q": f"{job} in {loc} {exp} {cat}",
-        "hl": "en",
-        "api_key": SERPAPI_KEY,
-        "date_posted": recency,
-    }
+    
+    # Use direct HTTP request instead of GoogleSearch library
     try:
-        # data = GoogleSearch(params).get_dict()  # Commented out due to missing import
-        return []  # Return empty list since GoogleSearch is not available
+        import requests
+        
+        params = {
+            "engine": "google_jobs",
+            "q": f"{job} in {loc} {exp} {cat}",
+            "hl": "en",
+            "api_key": SERPAPI_KEY,
+            "date_posted": recency,
+        }
+        
+        response = requests.get("https://serpapi.com/search", params=params, timeout=30)
+        if response.status_code != 200:
+            log.warning(f"SerpAPI returned status {response.status_code}")
+            return []
+            
+        data = response.json()
+        
     except Exception as e:
-        return [{"error": f"SerpAPI error: {e}"}]
+        log.error(f"SerpAPI request failed: {e}")
+        return []
     out = []
     for j in data.get("jobs_results", []):
         out.append(

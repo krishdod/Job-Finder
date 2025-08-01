@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: job-finder-api
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python start.py
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: RAPIDAPI_KEY
+        sync: false  # Set this in Render dashboard
+      - key: SERPAPI_KEY
+        sync: false  # Set this in Render dashboard
+    healthCheckPath: /health

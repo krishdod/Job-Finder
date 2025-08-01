@@ -2,16 +2,34 @@ from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import logging
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s  %(levelname)s  %(message)s")
 logger = logging.getLogger("backend")
 
-app = FastAPI(title="Resume-Based Job Finder API", version="1.0.0")
+app = FastAPI(
+    title="Resume-Based Job Finder API", 
+    version="1.0.0",
+    description="AI-powered job finder that matches resumes with relevant opportunities"
+)
 
-# CORS: Allow frontend domains + dev
+# CORS: Configure for production and development
+allowed_origins = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "https://job-finder-vgny.vercel.app",
+    "https://job-finder-krishs-projects-808bd679.vercel.app",
+    "https://job-finder.vercel.app",
+    "*"  # Allow all origins for now to fix CORS issues
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Replace with specific domains in prod
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -80,7 +80,10 @@ export default function ResumeForm({ onResults, onLoading }) {
         formData,
         { 
           params: { location, limit: jobLimit },
-          timeout: 60000 // 30 second timeout
+          timeout: 120000, // 2 minute timeout for job search
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          }
         }
       );
       
